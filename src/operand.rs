@@ -1,3 +1,4 @@
+use std::ffi::CStr;
 use crate::types::{TypeRef, Typed, Types};
 use crate::{ConstantRef, Name};
 use std::fmt::{self, Display};
@@ -11,7 +12,7 @@ pub enum Operand {
     },
     /// includes [`GlobalReference`](../constant/enum.Constant.html#variant.GlobalReference) for things like `@foo`
     ConstantOperand(ConstantRef),
-    MetadataOperand, // --TODO not yet implemented-- MetadataOperand(Box<Metadata>),
+    MetadataOperand(String),
 }
 
 impl Typed for Operand {
@@ -19,7 +20,7 @@ impl Typed for Operand {
         match self {
             Operand::LocalOperand { ty, .. } => ty.clone(),
             Operand::ConstantOperand(c) => types.type_of(c),
-            Operand::MetadataOperand => types.metadata_type(),
+            Operand::MetadataOperand(_) => types.metadata_type(),
         }
     }
 }
@@ -50,7 +51,7 @@ impl Display for Operand {
         match self {
             Operand::LocalOperand { name, ty } => write!(f, "{} {}", ty, name),
             Operand::ConstantOperand(cref) => write!(f, "{}", &cref),
-            Operand::MetadataOperand => write!(f, "<metadata>"),
+            Operand::MetadataOperand(s) => write!(f, "{}", s),
         }
     }
 }
@@ -77,7 +78,18 @@ impl Operand {
         } else if unsafe {
             LLVMGetValueKind(operand) == LLVMValueKind::LLVMMetadataAsValueValueKind
         } {
-            Operand::MetadataOperand
+
+            let mut string:String = "(metadata)".to_string();
+            unsafe {
+                let c_str_ptr = LLVMGetMDString(operand, std::mem::transmute(&mut 64) );
+                if !c_str_ptr.is_null() { // successful cast
+                    let c_str = CStr::from_ptr(c_str_ptr);
+                    string = c_str.to_string_lossy().into_owned();
+                }
+
+            }
+
+                Operand::MetadataOperand(string)
         } else {
             Operand::LocalOperand {
                 name: func_ctx.val_names
