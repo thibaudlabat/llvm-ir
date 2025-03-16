@@ -2995,7 +2995,9 @@ impl Fence {
         Self {
             atomicity: Atomicity {
                 synch_scope: SynchronizationScope::from_llvm_ref(inst),
-                mem_ordering: MemoryOrdering::from_llvm(unsafe { LLVMGetOrdering(inst) }),
+                // nuked because of a crash while analyzing Nginx
+                mem_ordering: MemoryOrdering::Unordered,
+                //mem_ordering: MemoryOrdering::from_llvm(unsafe { LLVMGetOrdering(inst) }),
             },
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
