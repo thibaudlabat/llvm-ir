@@ -6,6 +6,7 @@ use crate::{BasicBlock, ConstantRef, Name};
 /// See [LLVM 14 docs on Functions](https://releases.llvm.org/14.0.0/docs/LangRef.html#functions)
 #[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Function {
+    pub _valueRef: Option<LLVMValueRef>,
     pub name: String,
     pub parameters: Vec<Parameter>,
     pub is_var_arg: bool,
@@ -54,6 +55,7 @@ impl Function {
     /// A Function instance as empty as possible, using defaults
     pub fn new(name: impl Into<String>) -> Self {
         Self {
+            _valueRef: None,
             name: name.into(),
             parameters: vec![],
             is_var_arg: false,
@@ -479,6 +481,7 @@ impl Function {
         };
 
         Self {
+            _valueRef: Some(func),
             name: decl.name,
             parameters: decl.parameters,
             is_var_arg: decl.is_var_arg,
